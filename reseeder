@@ -1,0 +1,20 @@
+#!/bin/sh
+IFS_BACKUP=${IFS}
+IFS="
+"
+echo Enter a directory to be searched
+read  searchDirectory
+echo "#****************************************************************#"
+echo "#      Looking for .magnetLINK files in" $searchDirectory "      #"
+echo "#****************************************************************#"
+results=( $(find "$searchDirectory" -name "*.magnetLINK") )
+
+echo ""
+
+for i in "${results[@]}"
+do
+	echo $i
+	sh $i
+done
+
+
