@@ -1,8 +1,6 @@
-transmission-remote -t 2 -i | grep "Magnet:" | sed -r 's/^.{10}//'
-
 #!/bin/sh
 
-##Save Old directory and Create Placeholder for New drectory
+##Save Old directory and Create Placeholder for New directory
 OLD_DIR="$TR_TORRENT_DIR"
 NEW_DIR="$TR_TORRENT_DIR"/"$TR_TORRENT_NAME"-DIR
 
