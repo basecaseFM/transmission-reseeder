@@ -29,8 +29,24 @@ name="$TR_TORRENT_NAME"
 
 magnetLINK="$magnetLINK"
 currentDIR="$(pwd)"
+foundSTRING="$(transmission-remote -l | grep "$name" )"
 
-test "\$(transmission-remote -l | grep "\$name")" == "" && ( transmission-remote -a "\$magnetLINK" -w "\$currentDIR" )
+if [ -z "$foundSTRING" ]
+then
+   transmission-remote -a "$magnetLINK" -w "$currentDIR" 
+   echo "Torrent is NOT already loaded in Transmission"
+
+else
+   torrentID="$(echo $foundSTRING | awk '{print $1}' | sed 's/\*//g' )"
+   transmission-remote -t $torrentID --find "$currentDIR"
+   transmission-remote -t $torrentID -s
+   echo "Torrent already in list, moving to current location."
+fi
+
+
+
+
+
 EOL
 
 ## Change to new location in Transmission"
