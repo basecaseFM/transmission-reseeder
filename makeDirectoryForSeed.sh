@@ -28,7 +28,7 @@ cat > "$NEW_DIR"/"$TR_TORRENT_NAME".magnetLINK <<EOL
 name="$TR_TORRENT_NAME"
 
 magnetLINK="$magnetLINK"
-currentDIR="\$( cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd )"
+currentDIR="$(pwd)"
 
 test "\$(transmission-remote -l | grep "\$name")" == "" && ( transmission-remote -a "\$magnetLINK" -w "\$currentDIR" )
 EOL
