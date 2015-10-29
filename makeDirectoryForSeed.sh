@@ -28,25 +28,20 @@ cat > "$NEW_DIR"/"$TR_TORRENT_NAME".magnetLINK <<EOL
 name="$TR_TORRENT_NAME"
 
 magnetLINK="$magnetLINK"
-currentDIR="$(pwd)"
-foundSTRING="$(transmission-remote -l | grep "$name" )"
+currentDIR="\$( cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd )"
+foundSTRING="\$(transmission-remote -l | grep "$name" )"
 
-if [ -z "$foundSTRING" ]
+if [ -z '\$foundSTRING' ]
 then
-   transmission-remote -a "$magnetLINK" -w "$currentDIR" 
+   transmission-remote -a "\$magnetLINK" -w "\$currentDIR" 
    echo "Torrent is NOT already loaded in Transmission"
 
 else
-   torrentID="$(echo $foundSTRING | awk '{print $1}' | sed 's/\*//g' )"
-   transmission-remote -t $torrentID --find "$currentDIR"
-   transmission-remote -t $torrentID -s
+   torrentID="\$(echo \$foundSTRING | awk '{print $1}' | sed 's/\*//g' )"
+   transmission-remote -t \$torrentID --find "\$currentDIR"
+   transmission-remote -t \$torrentID -s
    echo "Torrent already in list, moving to current location."
 fi
-
-
-
-
-
 EOL
 
 ## Change to new location in Transmission"
