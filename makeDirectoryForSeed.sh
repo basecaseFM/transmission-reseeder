@@ -29,12 +29,12 @@ name="$TR_TORRENT_NAME"
 
 magnetLINK="$magnetLINK"
 currentDIR="\$( cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd )"
-foundSTRING="\$(transmission-remote -l | grep "\$name" )"
+foundSTRING="\$(transmission-remote -l | fgrep "\$name" )"
 
 if [ -z "\$foundSTRING" ]
 then
    transmission-remote -a "\$magnetLINK" -w "\$currentDIR" 
-   foundSTRING="\$(transmission-remote -l | grep "\$name" )"
+   foundSTRING="\$(transmission-remote -l | fgrep "\$name" )"
    torrentID="\$(echo \$foundSTRING | awk '{print \$1}' | sed 's/\*//g' )"
    transmission-remote -t \$torrentID -v
    echo "Torrent is NOT already loaded in Transmission"

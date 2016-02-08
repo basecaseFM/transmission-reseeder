@@ -16,5 +16,3 @@ do
 	echo $i
 	sh $i
 done
-
-
