@@ -1,5 +1,21 @@
 #!/bin/sh
 
+#---------------------------------------------------------------------------------------------------------------------------#
+#		This script is designed to make seeding already downloaded content easier. It does this by saving           #
+#	torrent to the newly created download directory and creating a magnetLINK shell script that contains everything	    #
+#	needed to easily reseed content, including the magnetlink and a mechanism to handle Transmission authenication      #
+#	and remote sessions.												    #
+#				Feel free to customise this script as needed. Any suggestions or improvements can be        #
+#				directed to the Github project   TRANSMISSION-RESEEDER on GITHUB.COM			    #
+#															    #
+#	Limitation: Does not support Username and password at the moment. Support coming soon!!				    #
+#															    #
+#---------------------------------------------------------------------------------------------------------------------------#
+
+## Port-Host Selection [enter non-default port or host values]
+remotePORT=9091 
+remoteHOST=localhost
+
 ##Save Old directory and Create Placeholder for New directory
 OLD_DIR="$TR_TORRENT_DIR"
 NEW_DIR="$TR_TORRENT_DIR"/"$TR_TORRENT_NAME"-DIR
@@ -20,20 +36,43 @@ else
   mv "$TR_TORRENT_DIR"/"$TR_TORRENT_NAME" "$NEW_DIR"
 
 fi
-## Copy Magnet link into a file
-magnetLINK=$(transmission-remote -t $TR_TORRENT_ID -i | grep "Magnet:" | sed -r 's/^.{10}//')
 
+##  Copy Magnet link into a file
+magnetLINK=$(transmission-remote $remoteHOST:$remotePORT -t $TR_TORRENT_ID -i | grep "Magnet:" | sed -r 's/^.{10}//')
+
+##  Copy torrent from transmission config directory to download directory
+cp /home/$USER/.config/transmission/torrents/"$TR_TORRENT_NAME"*.torrent "$NEW_DIR"
+ 
+##  Create "torrent name".magnetLINK bash script 
 cat > "$NEW_DIR"/"$TR_TORRENT_NAME".magnetLINK <<EOL
 #!/bin/sh
 name="$TR_TORRENT_NAME"
-
 magnetLINK="$magnetLINK"
+
+if [[ -z \$1 && -z \$3 && -z \$4 ]] ; then
+	alias transmission-remote="transmission-remote"
+elif [[ -n \$1 && -z \$3 && -z \$4 ]] ; then
+	alias transmission-remote="transmission-remote --auth \$1:\$2"
+elif [[ -z \$1 && -n \$3 && -z \$4 ]] ; then
+	alias transmission-remote="transmission-remote \$3"
+elif [[ -z \$1 && -z \$3 && -n \$4 ]] ; then
+	alias transmission-remote="transmission-remote \$4"
+elif [[ -z \$1 && -n \$3 && -n \$4 ]] ; then
+	alias transmission-remote="transmission-remote \$3:\$4"	
+elif [[ -n \$1 && -n \$3 && -z \$4 ]] ; then
+	alias transmission-remote="transmission-remote \$3 --auth \$1:\$2"
+elif [[ -n \$1 && -z \$3 && -n \$4 ]] ; then
+	alias transmission-remote="transmission-remote \$4 --auth \$1:\$2"
+elif [[ -n \$1 && -n \$3 && -n \$4 ]] ; then
+	alias transmission-remote="transmission-remote \$3:\$4 --auth \$1:\$2"
+fi	
+ 
 currentDIR="\$( cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd )"
 foundSTRING="\$(transmission-remote -l | fgrep "\$name" )"
 
 if [ -z "\$foundSTRING" ]
 then
-   transmission-remote -a "\$magnetLINK" -w "\$currentDIR" 
+   transmission-remote -a "\$currentDIR"\/*.torrent -w "\$currentDIR" 
    foundSTRING="\$(transmission-remote -l | fgrep "\$name" )"
    torrentID="\$(echo \$foundSTRING | awk '{print \$1}' | sed 's/\*//g' )"
    transmission-remote -t \$torrentID -v
@@ -48,6 +87,6 @@ fi
 EOL
 
 ## Change to new location in Transmission"
-transmission-remote -t $TR_TORRENT_ID --move "$NEW_DIR"
+transmission-remote $remoteHOST:$remotePORT -t $TR_TORRENT_ID --move "$NEW_DIR"
 
 echo "Torrent placed its own folder for easy seeding"
