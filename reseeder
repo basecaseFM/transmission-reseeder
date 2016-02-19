@@ -1,9 +1,42 @@
 #!/bin/sh
 IFS_BACKUP=${IFS}
-IFS="
-"
-echo Enter a directory to be searched
+IFS=""
+
+echo "#*******************************************************************************#"
+echo "#        Do you need a USERNAME and PASSWORD to connect to Transmission?        #"
+echo "#                            [Y]es or [N]o                                      #"
+echo "#*******************************************************************************#"
+read authSelection
+if [[ "$authSelection" =~ (y|Y|yes|YES) ]] ; then
+	read -p "Username:" USERNAME
+	stty -echo
+	printf "Password: "
+	read PASSWORD
+	stty echo
+	printf "\n"
+fi
+
+echo "#*******************************************************************************#"
+echo "#        Is Transmission running on a non-default PORT?                         #"
+echo "#                            [Y]es or [N]o                                      #"
+echo "#*******************************************************************************#"
+read portSelection
+if [[ "$portSelection" =~ (y|Y|yes|YES) ]] ; then
+	read -p "port:" PORT
+fi
+echo "#*******************************************************************************#"
+echo "#             Is Transmission running on a local HOST?                          #"
+echo "#                            [Y]es or [N]o                                      #"
+echo "#*******************************************************************************#"
+read hostSelection
+if [[ "$hostSelection" =~ (n|N|no|NO) ]] ; then
+	read -p "Enter HOST ip or domain name:" HOST
+fi
+echo "#****************************************************************#"
+echo "#      Enter a directory to be searched for MAGNETLINKS          #"
+echo "#****************************************************************#"
 read  searchDirectory
+
 echo "#****************************************************************#"
 echo "#      Looking for .magnetLINK files in" $searchDirectory "      #"
 echo "#****************************************************************#"
@@ -11,8 +44,25 @@ results=( $(find "$searchDirectory" -name "*.magnetLINK") )
 
 echo ""
 
+if [[ -z $USERNAME && -z $HOST && -z $PORT ]] ; then
+	alias transmission-remote="transmission-remote"
+elif [[ -n $USERNAME && -z $HOST && -z $PORT ]] ; then
+	alias transmission-remote="transmission-remote --auth $USERNAME:$PASSWORD"
+elif [[ -z $USERNAME && -n $HOST && -z $PORT ]] ; then
+	alias transmission-remote="transmission-remote $HOST"
+elif [[ -z $USERNAME && -z $HOST && -n $PORT ]] ; then
+	alias transmission-remote="transmission-remote $PORT"
+elif [[ -z $USERNAME && -n $HOST && -n $PORT ]] ; then
+	alias transmission-remote="transmission-remote $HOST:$PORT"	
+elif [[ -n $USERNAME && -n $HOST && -z $PORT ]] ; then
+	alias transmission-remote="transmission-remote $HOST --auth $USERNAME:$PASSWORD"
+elif [[ -n $USERNAME && -z $HOST && -n $PORT ]] ; then
+	alias transmission-remote="transmission-remote $PORT --auth $USERNAME:$PASSWORD"
+elif [[ -n $USERNAME && -n $HOST && -n $PORT ]] ; then
+	alias transmission-remote="transmission-remote $HOST:$PORT --auth $USERNAME:$PASSWORD"
+fi	
 for i in "${results[@]}"
 do
 	echo $i
-	sh $i
+	sh $i "$USERNAME" "$PASSWORD" "$HOST" "$PORT" 
 done
