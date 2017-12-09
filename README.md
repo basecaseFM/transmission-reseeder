@@ -8,3 +8,6 @@ The reseeder application simple collects all these ***.magnetLINK files and adds
 Because of the nature of the transmission, only the linux version works with these tools. The windows
 and mac versions might be supported someday. When every these platforms allow transmission-remote to be used.
 
+Contact
+basecase.fm@gmail.com
+feel free to talk crap or make requests...im just doing this for fun..:>
