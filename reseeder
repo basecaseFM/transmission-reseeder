@@ -61,8 +61,8 @@ elif [[ -n $USERNAME && -z $HOST && -n $PORT ]] ; then
 elif [[ -n $USERNAME && -n $HOST && -n $PORT ]] ; then
 	alias transmission-remote="transmission-remote $HOST:$PORT --auth $USERNAME:$PASSWORD"
 fi	
-for i in "${results[@]}"
-do
-	echo $i
-	sh $i "$USERNAME" "$PASSWORD" "$HOST" "$PORT" 
-done
+
+while read -r results; do
+    echo "... $results ..."
+    sh $results	"$USERNAME" "$PASSWORD" "$HOST" "$PORT" 
+done <<< "$results"
