@@ -72,7 +72,7 @@ foundSTRING="\$(transmission-remote -l | fgrep "\$name" )"
 
 if [ -z "\$foundSTRING" ]
 then
-   transmission-remote -a "\$currentDIR"\/*.torrent -w "\$currentDIR" 
+   transmission-remote -a "\$currentDIR"\/*.torrent -w "\$currentDIR" || transmission-remote -a "$magnetLINK" -w "$currentDIR"
    foundSTRING="\$(transmission-remote -l | fgrep "\$name" )"
    torrentID="\$(echo \$foundSTRING | awk '{print \$1}' | sed 's/\*//g' )"
    transmission-remote -t \$torrentID -v
