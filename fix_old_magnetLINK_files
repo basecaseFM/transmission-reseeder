@@ -1,0 +1,84 @@
+#!/bin/sh
+IFS_BACKUP=${IFS}
+IFS=""
+
+#*************************************************************************************************#
+#     Covert transmission .magnetLINK files to qbittorrent .magentLINKqbittorrent files
+#*************************************************************************************************#
+
+urldecode() {
+    # urldecode <string>
+
+    local url_encoded="${1//+/ }"
+    printf '%b' "${url_encoded//%/\\x}"
+}
+
+
+echo "#**********************************************************************************************************************************************#"
+echo "#      Enter a directory to be searched for MAGNETLINKS         																				 #"
+echo "#**********************************************************************************************************************************************#"
+read -e -p 'input: ' searchDirectory
+
+echo "#****************************************************************#"
+echo "#      Looking for .magnetLINK files in" $searchDirectory "      #"
+echo "#****************************************************************#"
+results=( $(find "$searchDirectory" -name "*.magnetLINK") )
+
+echo ""
+#"magnet:?xt=urn:btih:2f24d4276c0cf6b59fccb156eb478f873979232e&dn=Taxi%20Driver%20%281976%29&tr=udp%3A%2F%2Fopen.demonii.com%3A1337%2Fannounce"
+while read -r results; do
+    echo "... $results ..."
+    name=$(grep -e ^"magnetLINK=" "$results" | cut -d= -f4 | cut -d"&" -f1 | tr -d '"')
+    TR_TORRENT_NAME=$(urldecode $name)
+    magnetLINKfromFILE=$(grep -e "^magnetLINK=" "$results")
+    hash=$(grep -e ^"magnetLINK=" "$results" | cut -d: -f4 | cut -d"&" -f1)
+    save_DIR=$(dirname "$results")
+cat > "$save_DIR/$TR_TORRENT_NAME.magnetLINK" << EOL
+#!/bin/sh
+torrent_name="$TR_TORRENT_NAME"
+$magnetLINKfromFILE
+torrent_hash=$hash
+
+if [[ -z \$1 && -z \$3 && -z \$4 ]] ; then
+	alias transmission-remote="transmission-remote"
+elif [[ -n \$1 && -z \$3 && -z \$4 ]] ; then
+	alias transmission-remote="transmission-remote --auth \$1:\$2"
+elif [[ -z \$1 && -n \$3 && -z \$4 ]] ; then
+	alias transmission-remote="transmission-remote \$3"
+elif [[ -z \$1 && -z \$3 && -n \$4 ]] ; then
+	alias transmission-remote="transmission-remote \$4"
+elif [[ -z \$1 && -n \$3 && -n \$4 ]] ; then
+	alias transmission-remote="transmission-remote \$3:\$4"	
+elif [[ -n \$1 && -n \$3 && -z \$4 ]] ; then
+	alias transmission-remote="transmission-remote \$3 --auth \$1:\$2"
+elif [[ -n \$1 && -z \$3 && -n \$4 ]] ; then
+	alias transmission-remote="transmission-remote \$4 --auth \$1:\$2"
+elif [[ -n \$1 && -n \$3 && -n \$4 ]] ; then
+	alias transmission-remote="transmission-remote \$3:\$4 --auth \$1:\$2"
+fi	
+ 
+currentDIR="\$( cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd )"
+foundSTRING="\$(transmission-remote -t \$torrent_hash -ip)"
+declare -a torrentFiles
+for file in "\$currentDIR"\/*.torrent
+do
+    torrentFiles=("\${torrentFiles[@]}" "\$file")
+done
+
+if [ -z "\$foundSTRING" ]
+then
+    for torrent in "\${torrentFiles[@]}"
+    do
+        transmission-remote -a "\$torrent" -w "\$currentDIR" || transmission-remote -a "\$magnetLINK" -w "\$currentDIR"
+        foundSTRING="\$(transmission-remote -t \$torrent_hash -ip)"
+        transmission-remote -t \$torrent_hash -v
+    done
+   echo "Torrent is NOT already loaded in Transmission"
+
+else
+   transmission-remote -t \$torrent_hash --find "\$currentDIR"
+   transmission-remote -t \$torrent_hash -s
+   echo "Torrent already in list, moving to current location."
+fi
+EOL
+done <<< "$results"
