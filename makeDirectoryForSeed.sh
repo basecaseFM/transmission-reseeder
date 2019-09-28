@@ -37,8 +37,8 @@ else
 
 fi
 
-##  Copy Magnet link into a file
-magnetLINK=$(transmission-remote $remoteHOST:$remotePORT -t $TR_TORRENT_ID -i | grep "Magnet:" | sed -r 's/^.{10}//')
+##  Copy Magnet link into a a variable for the .magnetLINK file
+magnetLINK=$(transmission-remote $remoteHOST:$remotePORT -t $TR_TORRENT_HASH -i | grep "Magnet:" | sed -r 's/^.{10}//')
 
 ##  Copy torrent from transmission config directory to download directory
 cp /home/$USER/.config/transmission/torrents/"$TR_TORRENT_NAME"*.torrent "$NEW_DIR"
@@ -46,8 +46,9 @@ cp /home/$USER/.config/transmission/torrents/"$TR_TORRENT_NAME"*.torrent "$NEW_D
 ##  Create "torrent name".magnetLINK bash script 
 cat > "$NEW_DIR"/"$TR_TORRENT_NAME".magnetLINK <<EOL
 #!/bin/sh
-name="$TR_TORRENT_NAME"
+torrent_name="$TR_TORRENT_NAME"
 magnetLINK="$magnetLINK"
+torrent_hash=$TR_TORRENT_HASH
 
 if [[ -z \$1 && -z \$3 && -z \$4 ]] ; then
 	alias transmission-remote="transmission-remote"
@@ -68,7 +69,7 @@ elif [[ -n \$1 && -n \$3 && -n \$4 ]] ; then
 fi	
  
 currentDIR="\$( cd "\$(dirname "\${BASH_SOURCE[0]}")" && pwd )"
-foundSTRING="\$(transmission-remote -l | fgrep "\$name" )"
+foundSTRING="\$(transmission-remote -t \$torrent_hash -ip)"
 declare -a torrentFiles
 for file in "\$currentDIR"\/*.torrent
 do
@@ -80,21 +81,18 @@ then
     for torrent in "\${torrentFiles[@]}"
     do
         transmission-remote -a "\$torrent" -w "\$currentDIR" || transmission-remote -a "\$magnetLINK" -w "\$currentDIR"
-        foundSTRING="\$(transmission-remote -l | fgrep "\$name" )"
-        torrentID="\$(echo \$foundSTRING | awk '{print \$1}' | sed 's/\*//g' )"
-        transmission-remote -t \$torrentID -v
+        transmission-remote -t \$torrent_hash -v
     done
    echo "Torrent is NOT already loaded in Transmission"
 
 else
-   torrentID="\$(echo \$foundSTRING | awk '{print \$1}' | sed 's/\*//g' )"
-   transmission-remote -t \$torrentID --find "\$currentDIR"
-   transmission-remote -t \$torrentID -s
+   transmission-remote -t \$torrent_hash --find "\$currentDIR"
+   transmission-remote -t \$torrent_hash -s
    echo "Torrent already in list, moving to current location."
 fi
 EOL
 
 ## Change to new location in Transmission"
-transmission-remote $remoteHOST:$remotePORT -t $TR_TORRENT_ID --move "$NEW_DIR"
+transmission-remote $remoteHOST:$remotePORT -t $TR_TORRENT_HASH --move "$NEW_DIR"
 
 echo "Torrent placed its own folder for easy seeding"
