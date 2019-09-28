@@ -25,7 +25,6 @@ echo "#****************************************************************#"
 results=( $(find "$searchDirectory" -name "*.magnetLINK") )
 
 echo ""
-#"magnet:?xt=urn:btih:2f24d4276c0cf6b59fccb156eb478f873979232e&dn=Taxi%20Driver%20%281976%29&tr=udp%3A%2F%2Fopen.demonii.com%3A1337%2Fannounce"
 while read -r results; do
     echo "... $results ..."
     name=$(grep -e ^"magnetLINK=" "$results" | cut -d= -f4 | cut -d"&" -f1 | tr -d '"')
