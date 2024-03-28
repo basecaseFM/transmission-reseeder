@@ -38,10 +38,10 @@ else
 fi
 
 ##  Copy Magnet link into a a variable for the .magnetLINK file
-magnetLINK=$(transmission-remote $remoteHOST:$remotePORT -t $TR_TORRENT_HASH -i | grep "Magnet:" | sed -r 's/^.{10}//')
+magnetLINK=$(transmission-remote $remoteHOST:$remotePORT -t $TR_TORRENT_HASH -i | grep ^"  Magnet:" | sed -r 's/^.{10}//')
 
 ##  Copy torrent from transmission config directory to download directory
-cp /home/$USER/.config/transmission/torrents/"$TR_TORRENT_NAME"*.torrent "$NEW_DIR"
+cp /home/$USER/.config/transmission/torrents/"$TR_TORRENT_HASH"*.torrent "$NEW_DIR"
  
 ##  Create "torrent name".magnetLINK bash script 
 cat > "$NEW_DIR"/"$TR_TORRENT_NAME".magnetLINK <<EOL
