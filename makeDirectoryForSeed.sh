@@ -38,7 +38,8 @@ else
 fi
 
 ##  Copy Magnet link into a a variable for the .magnetLINK file
-magnetLINK=$(transmission-remote $remoteHOST:$remotePORT -t $TR_TORRENT_HASH -i | grep ^"  Magnet:" | sed -r 's/^.{10}//')
+## Removed for possible private tracker conflicts
+#magnetLINK=$(transmission-remote $remoteHOST:$remotePORT -t $TR_TORRENT_HASH -i | grep ^"  Magnet:" | sed -r 's/^.{10}//')
 
 ##  Copy torrent from transmission config directory to download directory
 cp /home/$USER/.config/transmission/torrents/"$TR_TORRENT_HASH"*.torrent "$NEW_DIR"
@@ -47,7 +48,7 @@ cp /home/$USER/.config/transmission/torrents/"$TR_TORRENT_HASH"*.torrent "$NEW_D
 cat > "$NEW_DIR"/"$TR_TORRENT_NAME".magnetLINK <<EOL
 #!/bin/sh
 torrent_name="$TR_TORRENT_NAME"
-magnetLINK="$magnetLINK"
+#magnetLINK="$magnetLINK"
 torrent_hash=$TR_TORRENT_HASH
 
 if [[ -z \$1 && -z \$3 && -z \$4 ]] ; then
