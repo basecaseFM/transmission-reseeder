@@ -2,7 +2,7 @@
 The purpose of this reseeder it to make the adding of previously downloaded material easier.
 Once you have downloaded the content once, the magnetLINK is copied into a special shell script
 which can be executed, on its own, to seed the content with transmission-** torrent client.
-The reseeder application simple collects all these ***.magnetLINK files and adds them to be seeded once again.
+The reseeder application simply collects all these ***.magnetLINK files and adds them to be seeded once again.
 
 # Limitations
 Because of the nature of the transmission, only the linux version works with these tools. The windows
